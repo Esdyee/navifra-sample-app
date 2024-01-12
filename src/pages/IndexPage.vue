@@ -1,6 +1,6 @@
 <template>
   <q-tabs
-    v-model="selectedCategory"
+    v-model="basicCategory"
     dense
     class="text-grey"
     active-color="primary"
@@ -12,11 +12,16 @@
     <q-tab name="alarms" label="Alarms" />
     <q-tab name="movies" label="Movies" />
     <q-tab v-for="category in categories"
+           @click="changeMapItem(category)"
            :key="category.categoryId"
            :name="category.categoryName"
            :label="category.categoryName"
     />
   </q-tabs>
+  <pre>
+    {{ JSON.stringify(selectedCategory) }}
+    {{ JSON.stringify(mapItems) }}
+  </pre>
   <q-page class="row items-center justify-evenly">
     <div id="naver-map" class="naver-map"></div>
     <example-component
@@ -40,15 +45,21 @@ import { Todo, Meta } from 'components/models';
 import ExampleComponent from 'components/ExampleComponent.vue';
 import { onMounted, ref } from 'vue';
 import { api } from 'boot/axios'
-import { CategoryApi } from '../service/category-api';
+import { CategoryApi, Category } from "../service/category-api";
+import { MapApi, MapItem } from "src/service/map-api";
 
 // call service 부분
 const categoryApi = new CategoryApi();
+const mapApi = new MapApi();
 
 // data 부분
-const selectedCategory = ref('search');
-const naverMap = ref();
 const categories = ref(categoryApi.getCategories());
+const basicCategory = ref('search');
+const selectedCategory = ref<Category>(categories.value[0]);
+const naverMap = ref();
+
+
+const mapItems = ref<MapItem[]>([]);
 
 sendRequest();
 
@@ -68,6 +79,12 @@ function getNaverMap() {
     center: center,
     zoom: 16
   });
+}
+
+function changeMapItem(category: Category) {
+  console.log(category);
+  selectedCategory.value = category;
+  mapItems.value = mapApi.getMapItem(category);
 }
 
 function sendRequest() {
