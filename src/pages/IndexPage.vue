@@ -1,4 +1,22 @@
 <template>
+  <q-tabs
+    v-model="selectedCategory"
+    dense
+    class="text-grey"
+    active-color="primary"
+    indicator-color="primary"
+    align="justify"
+  >
+    <q-tab name="search" label="검색" />
+    <q-tab name="mails" label="Mails" />
+    <q-tab name="alarms" label="Alarms" />
+    <q-tab name="movies" label="Movies" />
+    <q-tab v-for="category in categories"
+           :key="category.categoryId"
+           :name="category.categoryName"
+           :label="category.categoryName"
+    />
+  </q-tabs>
   <q-page class="row items-center justify-evenly">
     <div id="naver-map" class="naver-map"></div>
     <example-component
@@ -8,6 +26,13 @@
       :meta="meta"
     ></example-component>
   </q-page>
+  <q-footer bordered class="bg-grey-3 text-primary">
+    <q-tabs no-caps active-color="primary" indicator-color="transparent" class="text-grey-8" v-model="tab">
+      <q-tab name="images" label="Images" />
+      <q-tab name="videos" label="Videos" />
+      <q-tab name="articles" label="Articles" />
+    </q-tabs>
+  </q-footer>
 </template>
 
 <script setup lang="ts">
@@ -15,15 +40,24 @@ import { Todo, Meta } from 'components/models';
 import ExampleComponent from 'components/ExampleComponent.vue';
 import { onMounted, ref } from 'vue';
 import { api } from 'boot/axios'
+import { CategoryApi } from '../service/category-api';
 
+// call service 부분
+const categoryApi = new CategoryApi();
+
+// data 부분
+const selectedCategory = ref('search');
 const naverMap = ref();
-
-///v1/search/local.json?query=%EC%A3%BC%EC%8B%9D&display=10&start=1&sort=random
+const categories = ref(categoryApi.getCategories());
 
 sendRequest();
 
 onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
+  // getNaverMap();
+})
+
+function getNaverMap() {
   let map: naver.maps.Map;
   const center: naver.maps.LatLng = new naver.maps.LatLng(
     37.4979518,
@@ -34,8 +68,7 @@ onMounted(() => {
     center: center,
     zoom: 16
   });
-
-})
+}
 
 function sendRequest() {
   api.get('/v1/search/local.json?query=%EC%A3%BC%EC%8B%9D&display=10&start=1&sort=random')
