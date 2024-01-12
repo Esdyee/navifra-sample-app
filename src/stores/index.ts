@@ -7,6 +7,16 @@ import { Router } from 'vue-router';
  * extend the `PiniaCustomProperties` interface.
  * @see https://pinia.vuejs.org/core-concepts/plugins.html#typing-new-store-properties
  */
+
+// set dotenv
+// import dotenv from 'dotenv'
+// import path from "path";
+// dotenv.config()
+
+// const config = dotenv.config({
+//   path: path.join(__dirname, `.env.${process.env.APP_ENV}`),
+// }).parsed;
+
 declare module 'pinia' {
   export interface PiniaCustomProperties {
     readonly router: Router;
