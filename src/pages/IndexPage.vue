@@ -58,27 +58,34 @@ const basicCategory = ref('search');
 const selectedCategory = ref<Category>(categories.value[0]);
 const naverMap = ref();
 
-
 const mapItems = ref<MapItem[]>([]);
 
 // sendRequest();
 
 onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
-  // getNaverMap();
+  getNaverMap();
 })
 
-function getNaverMap() {
-  let map: naver.maps.Map;
-  const center: naver.maps.LatLng = new naver.maps.LatLng(
-    37.4979518,
-    127.027619
-  );
 
-  map = new naver.maps.Map('naver-map', {
-    center: center,
-    zoom: 16
-  });
+
+function getNaverMap() {
+  if (window.naver && window.naver.maps) {
+    let map: naver.maps.Map;
+    const center: naver.maps.LatLng = new naver.maps.LatLng(
+      37.4979518,
+      127.027619
+    );
+    map = new naver.maps.Map('naver-map', {
+      center: center,
+      zoom: 16
+    });
+  } else {
+    // 초기 로딩시에 전역 naver가 없으면 1초 뒤에 다시 실행
+    setTimeout(() => {
+      getNaverMap();
+    }, 1000);
+  }
 }
 
 function changeMapItem(category: Category) {
