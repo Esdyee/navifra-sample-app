@@ -1,5 +1,5 @@
 import { boot } from 'quasar/wrappers';
-import axios, { AxiosInstance, AxiosProxyConfig } from "axios";
+import axios, { AxiosInstance, AxiosProxyConfig } from 'axios';
 
 const axiosConfig: AxiosProxyConfig = {
   host: 'http://localhost',

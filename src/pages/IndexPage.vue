@@ -45,8 +45,8 @@ import { Todo, Meta } from 'components/models';
 import ExampleComponent from 'components/ExampleComponent.vue';
 import { onMounted, ref } from 'vue';
 import { api } from 'boot/axios'
-import { CategoryApi, Category } from "../service/category-api";
-import { MapApi, MapItem } from "src/service/map-api";
+import { CategoryApi, Category } from '../service/category-api';
+import { MapApi, MapItem } from 'src/service/map-api';
 
 // call service 부분
 const categoryApi = new CategoryApi();
@@ -61,7 +61,7 @@ const naverMap = ref();
 
 const mapItems = ref<MapItem[]>([]);
 
-sendRequest();
+// sendRequest();
 
 onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
