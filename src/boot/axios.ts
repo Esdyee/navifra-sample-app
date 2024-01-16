@@ -21,10 +21,7 @@ declare module '@vue/runtime-core' {
 // for each client)
 const api = axios.create(
   {
-    headers: {
-      'X-Naver-Client-Id': 'MkpeHBAdTmzZQfgxCrB5',
-      'X-Naver-Client-Secret': 'mtVtf4LKOC',
-    }
+
   }
 );
 

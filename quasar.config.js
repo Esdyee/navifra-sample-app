@@ -100,6 +100,11 @@ module.exports = configure(function (ctx) {
           target: 'https://openapi.naver.com',
           changeOrigin: true,
           secure: false
+        },
+        '/map-direction': {
+          target: 'https://naveropenapi.apigw.ntruss.com',
+          changeOrigin: true,
+          secure: false
         }
       },
       open: false, // opens browser window automatically

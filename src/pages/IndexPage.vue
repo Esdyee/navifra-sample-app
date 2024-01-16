@@ -25,15 +25,10 @@
 
   <button @click="setMarker">setMarker</button>
   <button @click="getNaverDistance">getNaverDistance</button>
+  <button @click="sendDirectionRequest">sendDirectionRequest</button>
 
   <q-page class="row items-center justify-evenly">
     <div id="naver-map" class="naver-map"></div>
-    <example-component
-      title="Example component"
-      active
-      :todos="todos"
-      :meta="meta"
-    ></example-component>
   </q-page>
 
 
@@ -77,13 +72,14 @@ onMounted(() => {
   getNaverMap();
 })
 
-function getNaverDistance() {
+async function getNaverDistance() {
 
   setMarker(37.4986080, 127.0287482);
   setMarker(37.4979518, 127.027619);
 
-  const start = new naver.maps.LatLng(37.4986080, 127.0287482)
-  const end = new naver.maps.LatLng(37.4979518, 127.027619);
+  const start = new naver.maps.LatLng(37.4979518, 127.027619);
+  const end = new naver.maps.LatLng(37.4986080, 127.0287482)
+
   const startlower = start.destinationPoint(180, 1500);
   const endlower = end.destinationPoint(180, 1500);
 
@@ -95,33 +91,11 @@ function getNaverDistance() {
 
   console.log(distance);
 
-  var sizedCircleAndDiamondLine = new naver.maps.Polyline({
-    path: [
-      start,
-      end
-    ],
-    map: map,
-    startIcon: naver.maps.PointingIcon.CIRCLE,
-    startIconSize: 10,
-    endIcon: naver.maps.PointingIcon.DIAMOND,
-    endIconSize: 10,
-    strokeColor: '#ff0000',
-    strokeOpacity: 0.5,
-    strokeWeight: 6
-  });
+  await sendDirectionRequest(
+    start.lng().toString(), start.lat().toString(),
+    end.lng().toString(), end.lat().toString()
+  )
 
-  var infowindow = new naver.maps.InfoWindow({
-    content: '<div style="padding:20px;">' + 'geolocation.getCurrentPosition() 위치' + '</div>',
-    backgroundColor: '#eee',
-    borderColor: '#2db400',
-    borderWidth: 2,
-    anchorSize: new naver.maps.Size(30, 30),
-    anchorSkew: true,
-    anchorColor: '#eee',
-    pixelOffset: new naver.maps.Point(20, -20)
-  });
-
-  infowindow.open(map, start)
 }
 
 
@@ -168,6 +142,33 @@ function setMarker(lat: number, lng: number) {
   });
 }
 
+function setPolyLine(start: naver.maps.LatLng, end: naver.maps.LatLng) {
+  const polyline = new naver.maps.Polyline({
+    map: map,
+    path: [
+      start,
+      end
+    ],
+    strokeWeight: 5,
+    strokeColor: '#ff0000',
+    strokeOpacity: 0.5
+  });
+}
+
+function setInfoWindow(content: string) {
+  return new naver.maps.InfoWindow({
+    content: content,
+    backgroundColor: '#eee',
+    borderColor: '#2db400',
+    borderWidth: 2,
+    anchorSize: new naver.maps.Size(30, 30),
+    anchorSkew: true,
+    anchorColor: '#eee',
+    pixelOffset: new naver.maps.Point(20, -20)
+  });
+
+}
+
 function stringToLat(str: string): number {
   // dot the 7th digit from the back
   const lat = str.slice(0, -7) + '.' + str.slice(-7);
@@ -180,14 +181,80 @@ function stringToLng(str: string): number {
   return Number(lng);
 }
 
-function sendRequest() {
-  api.get('/v1/search/local.json?query=%EC%A3%BC%EC%8B%9D&display=10&start=1&sort=random')
+function sendSearchRequest() {
+  api.get('/v1/search/local.json?query=%EC%A3%BC%EC%8B%9D&display=10&start=1&sort=random', {
+    headers: {
+      'X-Naver-Client-Id': process.env.X_NAVER_CLIENT_ID,
+      'X-Naver-Client-Secret': process.env.X_NAVER_CLIENT_SECRET,
+    }
+  })
     .then((res) => {
       console.log(res.data);
     })
     .catch((err) => {
       console.log(err);
     })
+}
+
+function sendDirectionRequest(
+  startLng:string, startLat:string,
+  endLng:string, endLat:string, ) {
+
+  return api.get(`/map-direction/v1/driving?start=${startLng},${startLat}&goal=${endLng},${endLat}&option=trafast`, {
+    headers: {
+      'X-NCP-APIGW-API-KEY-ID': process.env.X_NCP_APIGW_API_KEY_ID,
+      'X-NCP-APIGW-API-KEY': process.env.X_NCP_APIGW_API_KEY,
+    }
+  })
+    .then((res) => {
+      console.log(res.data);
+
+      let startLatLng = new naver.maps.LatLng(Number(startLat), Number(startLng));
+      let previousLatLng: naver.maps.LatLng;
+      let nextLatLng: naver.maps.LatLng;
+      let finalLatLng;
+
+      res.data.route.trafast[0].path.forEach((path:number[], index: number) => {
+
+          const lng = path[0];
+          const lat = path[1];
+
+          if(index === 0) {
+            previousLatLng = startLatLng;
+            nextLatLng = new naver.maps.LatLng(lat, lng);
+          } else {
+            previousLatLng = nextLatLng;
+            nextLatLng = new naver.maps.LatLng(lat, lng);
+
+            // finalLatLng 마지막 좌표
+            if(index === res.data.route.trafast[0].path.length - 1) {
+              finalLatLng = nextLatLng;
+            }
+          }
+
+          console.log(previousLatLng, nextLatLng)
+
+          // set polyline
+          setPolyLine(
+            previousLatLng,
+            nextLatLng
+          )
+        })
+
+      const { distance, speed } = res.data.route.trafast[0].section[0]
+
+      setInfoWindow(
+        `
+          <div style="padding: 10px">
+            <p>distance: ${distance} / speed: ${speed}</p>
+          </div>
+          `
+      ).open(map, finalLatLng);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+
 }
 
 const todos = ref<Todo[]>([
