@@ -1,33 +1,34 @@
 <template>
-  <q-tabs
-    v-model="basicCategory"
-    dense
-    class="text-grey"
-    active-color="primary"
-    indicator-color="primary"
-    align="justify"
-  >
-    <q-tab name="search" label="검색" />
-    <q-tab name="mails" label="Mails" />
-    <q-tab name="alarms" label="Alarms" />
-    <q-tab name="movies" label="Movies" />
-    <q-tab v-for="category in categories"
-           @click="changeMapItem(category)"
-           :key="category.categoryId"
-           :name="category.categoryName"
-           :label="category.categoryName"
-    />
-  </q-tabs>
-  <pre>
-    {{ JSON.stringify(selectedCategory) }}
-    {{ JSON.stringify(mapItems) }}
-  </pre>
-
-  <button @click="setMarker">setMarker</button>
-  <button @click="getNaverDistance">getNaverDistance</button>
-  <button @click="sendDirectionRequest">sendDirectionRequest</button>
-
   <q-page class="row items-center justify-evenly">
+    <q-tabs
+      v-model="basicCategory"
+      dense
+      class="text-grey"
+      active-color="primary"
+      indicator-color="primary"
+      align="justify"
+    >
+      <q-tab name="search" label="검색" />
+      <q-tab name="mails" label="Mails" />
+      <q-tab name="alarms" label="Alarms" />
+      <q-tab name="movies" label="Movies" />
+      <q-tab v-for="category in categories"
+             @click="changeMapItem(category)"
+             :key="category.categoryId"
+             :name="category.categoryName"
+             :label="category.categoryName"
+      />
+    </q-tabs>
+    <pre>
+      {{ JSON.stringify(selectedCategory) }}
+      {{ JSON.stringify(mapItems) }}
+    </pre>
+    <div>
+      <button @click="myLocation">myLocation</button>
+      <button @click="setMarker">setMarker</button>
+      <button @click="getNaverDistance">getNaverDistance</button>
+      <button @click="sendDirectionRequest">sendDirectionRequest</button>
+    </div>
     <div id="naver-map" class="naver-map"></div>
   </q-page>
 
@@ -44,13 +45,10 @@
 
 <script setup lang="ts">
 import { Todo, Meta } from 'components/models';
-import ExampleComponent from 'components/ExampleComponent.vue';
 import { onMounted, ref } from 'vue';
 import { api } from 'boot/axios'
 import { CategoryApi, Category } from '../service/category-api';
 import { MapApi, MapItem } from 'src/service/map-api';
-import getDistance = naver.maps.UTMK.getDistance;
-import InfoWindowOptions = naver.maps.InfoWindowOptions;
 
 // call service 부분
 const categoryApi = new CategoryApi();
@@ -65,48 +63,57 @@ let map: naver.maps.Map;
 
 const mapItems = ref<MapItem[]>([]);
 
-// sendRequest();
 
 onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
   getNaverMap();
 })
 
+
+function myLocation() {
+
+  const center: naver.maps.LatLng = new naver.maps.LatLng(
+    37.4979518,
+    127.027619
+  );
+
+  map.setCenter(center);
+
+}
+
+
+// 거리 재기
 async function getNaverDistance() {
 
-  setMarker(37.4986080, 127.0287482);
-  setMarker(37.4979518, 127.027619);
-
   const start = new naver.maps.LatLng(37.4979518, 127.027619);
-  const end = new naver.maps.LatLng(37.4986080, 127.0287482)
+  const end = new naver.maps.LatLng(37.4986080, 127.0287482);
 
-  const startlower = start.destinationPoint(180, 1500);
-  const endlower = end.destinationPoint(180, 1500);
+  setMarker(start);
+  setMarker(end);
 
+  // const startlower = start.destinationPoint(180, 1500);
+  // const endlower = end.destinationPoint(180, 1500);
+
+  // 지도의 투영도를 생성, 이 위에 그림을 그림
   const projection = map.getProjection();
   const distance = projection.getDistance(
     start,
     end
   );
 
-  console.log(distance);
-
+  // 네비게이션 API 호출
   await sendDirectionRequest(
-    start.lng().toString(), start.lat().toString(),
-    end.lng().toString(), end.lat().toString()
+    start,
+    end
   )
 
 }
 
-
+// 네이버 MAP 로딩
 function getNaverMap() {
   if (window.naver && window.naver.maps) {
-    const center: naver.maps.LatLng = new naver.maps.LatLng(
-      37.4979518,
-      127.027619
-    );
+
     map = new naver.maps.Map('naver-map', {
-      center: center,
       zoom: 16,
       mapTypeId: naver.maps.MapTypeId.NORMAL
     });
@@ -118,26 +125,23 @@ function getNaverMap() {
   }
 }
 
+// 카테고리 마커 찍기
 function changeMapItem(category: Category) {
-  console.log(category);
   selectedCategory.value = category;
   mapItems.value = mapApi.getMapItem(category);
 
-  console.log(mapItems.value);
-
   // mapx == lng, mapy == lat
   mapItems.value.forEach((item) => {
-    console.log(stringToLat(item.mapy), stringToLng(item.mapx));
-    setMarker(stringToLat(item.mapy), stringToLng(item.mapx));
+
+    const latlng = new naver.maps.LatLng(stringToLat(item.mapy), stringToLng(item.mapx));
+    setMarker(latlng);
+
   })
 }
 
-function setMarker(lat: number, lng: number) {
+function setMarker(latlng: naver.maps.LatLng) {
   let marker = new naver.maps.Marker({
-    position: new naver.maps.LatLng(
-      lat,
-      lng
-    ),
+    position: latlng,
     map: map
   });
 }
@@ -197,8 +201,14 @@ function sendSearchRequest() {
 }
 
 function sendDirectionRequest(
-  startLng:string, startLat:string,
-  endLng:string, endLat:string, ) {
+  startLngLat:  naver.maps.LatLng,
+  endLngLat: naver.maps.LatLng,
+ ) {
+
+  const startLng = startLngLat.lng().toString();
+  const startLat = startLngLat.lat().toString();
+  const endLng = endLngLat.lng().toString();
+  const endLat = endLngLat.lat().toString();
 
   return api.get(`/map-direction/v1/driving?start=${startLng},${startLat}&goal=${endLng},${endLat}&option=trafast`, {
     headers: {
