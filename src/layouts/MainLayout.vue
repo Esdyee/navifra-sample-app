@@ -28,7 +28,7 @@
         <q-item-label
           header
         >
-          Essential Links
+          Essential Links / {{ leftDrawerOpen }}
         </q-item-label>
 
         <EssentialLink
@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from "vue";
 import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
 
 const essentialLinks: EssentialLinkProps[] = [
@@ -94,9 +94,14 @@ const essentialLinks: EssentialLinkProps[] = [
   }
 ];
 
-const leftDrawerOpen = ref(false)
+const leftDrawerOpen = ref(false);
+
+onMounted(() => {
+  leftDrawerOpen.value = false;
+});
 
 function toggleLeftDrawer() {
+  console.log('toggleLeftDrawer!!');
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 </script>

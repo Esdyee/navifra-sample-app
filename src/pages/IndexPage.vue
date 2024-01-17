@@ -9,9 +9,6 @@
       align="justify"
     >
       <q-tab name="search" label="검색" />
-      <q-tab name="mails" label="Mails" />
-      <q-tab name="alarms" label="Alarms" />
-      <q-tab name="movies" label="Movies" />
       <q-tab v-for="category in categories"
              @click="changeMapItem(category)"
              :key="category.categoryId"
@@ -21,14 +18,15 @@
     </q-tabs>
 
     <pre>
-      {{ JSON.stringify(selectedCategory) }}
-      {{ JSON.stringify(mapItems) }}
+      {{ myLocationMarker }}
     </pre>
+
     <div class="button-box">
       <button @click="setMyLocation">setMyLocation</button>
       <button @click="setMarker">setMarker</button>
       <button @click="getNaverDistance">getNaverDistance</button>
       <button @click="sendDirectionRequest">sendDirectionRequest</button>
+      <button @click="deleteMarker">deleteMarker</button>
     </div>
     <div class="map-box">
       <div id="naver-map" class="naver-map"></div>
@@ -37,7 +35,7 @@
 
 
   <q-footer bordered class="bg-grey-3 text-primary">
-    <q-tabs no-caps active-color="primary" indicator-color="transparent" class="text-grey-8" v-model="tab">
+    <q-tabs no-caps active-color="primary" indicator-color="transparent" class="text-grey-8">
       <q-tab name="images" label="Images" />
       <q-tab name="videos" label="Videos" />
       <q-tab name="articles" label="Articles" />
@@ -65,9 +63,11 @@ const selectedCategory = ref<Category>(categories.value[0]);
 const naverMap = ref();
 
 let myLocation: naver.maps.LatLng;
+let myLocationMarker: naver.maps.Marker;
 let map: naver.maps.Map;
 
 const mapItems = ref<MapItem[]>([]); // 카테고리의 map item 저장
+const categoryMarkers = ref<naver.maps.Marker[]>([]); // 카테고리별 마커 저장
 const polylines = ref<naver.maps.Polyline[]>([]); // polyline 이력 저장
 
 onMounted(() => {
@@ -75,6 +75,8 @@ onMounted(() => {
   getNaverMap();
 })
 
+
+// 좌표간 거리 가져오기
 async function getNaverDistance(endpoint: naver.maps.LatLng) {
 
   let start = myLocation;
@@ -108,16 +110,33 @@ async function getNaverDistance(endpoint: naver.maps.LatLng) {
 
 }
 
+
+// 현재 내 위치 셋팅
 function setMyLocation() {
+
+  const lat = 37.4979518;
+  const lng = 127.027619;
+
+  const randomLat = Number((lat + (Math.random() * 0.01)).toFixed(7));
+  const randomLng = Number((lng + (Math.random() * 0.01)).toFixed(7));
+
+  console.log(randomLat, randomLng);
+
   myLocation = new naver.maps.LatLng(
-    37.4979518,
-    127.027619
+    randomLat,
+    randomLng
   );
 
   map.setCenter(myLocation);
   setMarker(myLocation, true);
 }
 
+function deleteMarker() {
+  console.log(myLocationMarker);
+  myLocationMarker.setMap(null);
+}
+
+// 네이버 지도 가져오기
 function getNaverMap() {
   if (window.naver && window.naver.maps) {
     map = new naver.maps.Map('naver-map', {
@@ -132,12 +151,11 @@ function getNaverMap() {
   }
 }
 
+// 카테고리 클릭시 데이터 가져오기
 function changeMapItem(category: Category) {
   console.log(category);
   selectedCategory.value = category;
   mapItems.value = mapApi.getMapItem(category);
-
-  console.log(mapItems.value);
 
   // mapx == lng, mapy == lat
   mapItems.value.forEach((item) => {
@@ -153,6 +171,8 @@ function changeMapItem(category: Category) {
   })
 }
 
+
+// 마커 생성
 function setMarker(latLng: naver.maps.LatLng, myLocation = false) {
 
   let marker = new naver.maps.Marker({
@@ -160,12 +180,20 @@ function setMarker(latLng: naver.maps.LatLng, myLocation = false) {
     map: map,
     icon: myLocation ? {
       url: imgUrl, //아이콘 경로
-      size: new naver.maps.Size(50, 52),
+      size: new naver.maps.Size(52, 52),
       origin: new naver.maps.Point(0, 0),
       anchor: new naver.maps.Point(25, 26)
     } : ''
   });
 
+  if(myLocation) {
+    if(myLocationMarker) {
+      myLocationMarker.setMap(null);
+    }
+    myLocationMarker = marker;
+  } else {
+    categoryMarkers.value.push(marker);
+  }
 
   // 마커 클릭 이벤트
   naver.maps.Event.addListener(marker, 'click', function() {
@@ -203,6 +231,7 @@ function setInfoWindow(content: string) {
 
 }
 
+
 function stringToLat(str: string): number {
   // dot the 7th digit from the back
   const lat = str.slice(0, -7) + '.' + str.slice(-7);
@@ -215,6 +244,8 @@ function stringToLng(str: string): number {
   return Number(lng);
 }
 
+
+// 네이버 API 카테고리 검색 (실제 API 서버)
 function sendSearchRequest() {
   api.get('/v1/search/local.json?query=%EC%A3%BC%EC%8B%9D&display=10&start=1&sort=random', {
     headers: {
@@ -230,6 +261,7 @@ function sendSearchRequest() {
     })
 }
 
+// 경로 검색 요청
 function sendDirectionRequest(
   startLngLat: naver.maps.LatLng,
   endLngLat: naver.maps.LatLng
@@ -253,12 +285,13 @@ function sendDirectionRequest(
       let nextLatLng: naver.maps.LatLng;
       let finalLatLng;
 
-      // remove all polyline
+      // polyline 전체 삭제
       polylines.value.forEach((polyline) => {
         polyline.setMap(null);
       })
 
 
+      // 경로 검색 결과마다 polyline 생성
       res.data.route.trafast[0].path.forEach((path:number[], index: number) => {
 
           const lng = path[0];
@@ -287,10 +320,13 @@ function sendDirectionRequest(
 
       const { distance, speed } = res.data.route.trafast[0].section[0]
 
+
+      // InfoWindow(결과안내모달) 열기
       setInfoWindow(
         `
-          <div style="padding: 10px">
-            <p>distance: ${distance} / speed: ${speed}</p>
+          <div class="info-window" style="padding: 10px">
+            <p>distance: ${distance}(M)</p>
+            <p>speed: ${speed}(km/h)</p>
           </div>
           `
       ).open(map, finalLatLng);
@@ -301,36 +337,12 @@ function sendDirectionRequest(
 
 }
 
-const todos = ref<Todo[]>([
-  {
-    id: 1,
-    content: 'ct1'
-  },
-  {
-    id: 2,
-    content: 'ct2'
-  },
-  {
-    id: 3,
-    content: 'ct3'
-  },
-  {
-    id: 4,
-    content: 'ct4'
-  },
-  {
-    id: 5,
-    content: 'ct5'
-  }
-]);
-const meta = ref<Meta>({
-  totalCount: 1200
-});
 </script>
 
 <style>
 #naver-map {
   width: 85vw;
+  height: 70vh;
   min-width: 400px;
   min-height: 300px;
   border: black 1px solid;
@@ -343,5 +355,9 @@ width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.info-window p {
+  margin: 0;
 }
 </style>
