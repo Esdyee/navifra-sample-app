@@ -19,6 +19,7 @@
              :label="category.categoryName"
       />
     </q-tabs>
+
     <pre>
       {{ JSON.stringify(selectedCategory) }}
       {{ JSON.stringify(mapItems) }}
@@ -51,6 +52,7 @@ import { onMounted, ref } from 'vue';
 import { api } from 'boot/axios'
 import { CategoryApi, Category } from '../service/category-api';
 import { MapApi, MapItem } from 'src/service/map-api';
+import imgUrl from '../assets/image/red-marker.png';
 
 // call service 부분
 const categoryApi = new CategoryApi();
@@ -62,34 +64,42 @@ const basicCategory = ref('search');
 const selectedCategory = ref<Category>(categories.value[0]);
 const naverMap = ref();
 
-let myLocation;
+let myLocation: naver.maps.LatLng;
 let map: naver.maps.Map;
 
-const mapItems = ref<MapItem[]>([]);
+const mapItems = ref<MapItem[]>([]); // 카테고리의 map item 저장
+const polylines = ref<naver.maps.Polyline[]>([]); // polyline 이력 저장
 
 onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
   getNaverMap();
 })
 
-async function getNaverDistance() {
+async function getNaverDistance(endpoint: naver.maps.LatLng) {
 
-  const start = new naver.maps.LatLng(37.4979518, 127.027619);
-  const end = new naver.maps.LatLng(37.4986080, 127.0287482)
+  let start = myLocation;
+  let end;
 
-  setMarker(start);
-  setMarker(end);
+  console.log(start, endpoint);
+
+  if(!endpoint) {
+    end = new naver.maps.LatLng(37.4986080, 127.0287482);
+  } else {
+    end = endpoint;
+  }
+
+  // setMarker(start);
+  // setMarker(end);
 
   const startlower = start.destinationPoint(180, 1500);
   const endlower = end.destinationPoint(180, 1500);
+
 
   const projection = map.getProjection();
   const distance = projection.getDistance(
     start,
     end
   );
-
-  console.log(distance);
 
   await sendDirectionRequest(
     start,
@@ -99,13 +109,13 @@ async function getNaverDistance() {
 }
 
 function setMyLocation() {
-  const newLocation = new naver.maps.LatLng(
+  myLocation = new naver.maps.LatLng(
     37.4979518,
     127.027619
   );
 
-  map.setCenter(newLocation);
-  setMarker(newLocation, true);
+  map.setCenter(myLocation);
+  setMarker(myLocation, true);
 }
 
 function getNaverMap() {
@@ -143,19 +153,24 @@ function changeMapItem(category: Category) {
   })
 }
 
-function setMarker(latLng: naver.maps.LatLng, myLocation?: boolean) {
+function setMarker(latLng: naver.maps.LatLng, myLocation = false) {
+
   let marker = new naver.maps.Marker({
     position: latLng,
     map: map,
-    icon: {
-      fillColor: myLocation ? '#00f' : '#f00',
-    }
+    icon: myLocation ? {
+      url: imgUrl, //아이콘 경로
+      size: new naver.maps.Size(50, 52),
+      origin: new naver.maps.Point(0, 0),
+      anchor: new naver.maps.Point(25, 26)
+    } : ''
   });
+
 
   // 마커 클릭 이벤트
   naver.maps.Event.addListener(marker, 'click', function() {
     console.log('click marker');
-
+    getNaverDistance(latLng);
   });
 }
 
@@ -170,6 +185,8 @@ function setPolyLine(start: naver.maps.LatLng, end: naver.maps.LatLng) {
     strokeColor: '#ff0000',
     strokeOpacity: 0.5
   });
+
+  polylines.value.push(polyline);
 }
 
 function setInfoWindow(content: string) {
@@ -236,6 +253,12 @@ function sendDirectionRequest(
       let nextLatLng: naver.maps.LatLng;
       let finalLatLng;
 
+      // remove all polyline
+      polylines.value.forEach((polyline) => {
+        polyline.setMap(null);
+      })
+
+
       res.data.route.trafast[0].path.forEach((path:number[], index: number) => {
 
           const lng = path[0];
@@ -254,7 +277,6 @@ function sendDirectionRequest(
             }
           }
 
-          console.log(previousLatLng, nextLatLng)
 
           // set polyline
           setPolyLine(
