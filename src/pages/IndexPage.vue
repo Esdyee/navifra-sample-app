@@ -1,5 +1,5 @@
 <template>
-  <q-page class="row items-center justify-evenly">
+  <q-page class="items-center justify-evenly">
     <q-tabs
       v-model="basicCategory"
       dense
@@ -23,13 +23,15 @@
       {{ JSON.stringify(selectedCategory) }}
       {{ JSON.stringify(mapItems) }}
     </pre>
-    <div>
-      <button @click="myLocation">myLocation</button>
+    <div class="button-box">
+      <button @click="setMyLocation">setMyLocation</button>
       <button @click="setMarker">setMarker</button>
       <button @click="getNaverDistance">getNaverDistance</button>
       <button @click="sendDirectionRequest">sendDirectionRequest</button>
     </div>
-    <div id="naver-map" class="naver-map"></div>
+    <div class="map-box">
+      <div id="naver-map" class="naver-map"></div>
+    </div>
   </q-page>
 
 
@@ -59,49 +61,36 @@ const categories = ref(categoryApi.getCategories());
 const basicCategory = ref('search');
 const selectedCategory = ref<Category>(categories.value[0]);
 const naverMap = ref();
+
+let myLocation;
 let map: naver.maps.Map;
 
 const mapItems = ref<MapItem[]>([]);
-
 
 onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
   getNaverMap();
 })
 
-
-function myLocation() {
-
-  const center: naver.maps.LatLng = new naver.maps.LatLng(
-    37.4979518,
-    127.027619
-  );
-
-  map.setCenter(center);
-
-}
-
-
-// 거리 재기
 async function getNaverDistance() {
 
   const start = new naver.maps.LatLng(37.4979518, 127.027619);
-  const end = new naver.maps.LatLng(37.4986080, 127.0287482);
+  const end = new naver.maps.LatLng(37.4986080, 127.0287482)
 
   setMarker(start);
   setMarker(end);
 
-  // const startlower = start.destinationPoint(180, 1500);
-  // const endlower = end.destinationPoint(180, 1500);
+  const startlower = start.destinationPoint(180, 1500);
+  const endlower = end.destinationPoint(180, 1500);
 
-  // 지도의 투영도를 생성, 이 위에 그림을 그림
   const projection = map.getProjection();
   const distance = projection.getDistance(
     start,
     end
   );
 
-  // 네비게이션 API 호출
+  console.log(distance);
+
   await sendDirectionRequest(
     start,
     end
@@ -109,10 +98,18 @@ async function getNaverDistance() {
 
 }
 
-// 네이버 MAP 로딩
+function setMyLocation() {
+  const newLocation = new naver.maps.LatLng(
+    37.4979518,
+    127.027619
+  );
+
+  map.setCenter(newLocation);
+  setMarker(newLocation, true);
+}
+
 function getNaverMap() {
   if (window.naver && window.naver.maps) {
-
     map = new naver.maps.Map('naver-map', {
       zoom: 16,
       mapTypeId: naver.maps.MapTypeId.NORMAL
@@ -125,24 +122,40 @@ function getNaverMap() {
   }
 }
 
-// 카테고리 마커 찍기
 function changeMapItem(category: Category) {
+  console.log(category);
   selectedCategory.value = category;
   mapItems.value = mapApi.getMapItem(category);
+
+  console.log(mapItems.value);
 
   // mapx == lng, mapy == lat
   mapItems.value.forEach((item) => {
 
-    const latlng = new naver.maps.LatLng(stringToLat(item.mapy), stringToLng(item.mapx));
-    setMarker(latlng);
+    const latLng = new naver.maps.LatLng(
+      stringToLat(item.mapy),
+      stringToLng(item.mapx)
+    );
+
+    // 마커 찍기
+    setMarker(latLng);
 
   })
 }
 
-function setMarker(latlng: naver.maps.LatLng) {
+function setMarker(latLng: naver.maps.LatLng, myLocation?: boolean) {
   let marker = new naver.maps.Marker({
-    position: latlng,
-    map: map
+    position: latLng,
+    map: map,
+    icon: {
+      fillColor: myLocation ? '#00f' : '#f00',
+    }
+  });
+
+  // 마커 클릭 이벤트
+  naver.maps.Event.addListener(marker, 'click', function() {
+    console.log('click marker');
+
   });
 }
 
@@ -201,9 +214,9 @@ function sendSearchRequest() {
 }
 
 function sendDirectionRequest(
-  startLngLat:  naver.maps.LatLng,
-  endLngLat: naver.maps.LatLng,
- ) {
+  startLngLat: naver.maps.LatLng,
+  endLngLat: naver.maps.LatLng
+) {
 
   const startLng = startLngLat.lng().toString();
   const startLat = startLngLat.lat().toString();
@@ -217,7 +230,6 @@ function sendDirectionRequest(
     }
   })
     .then((res) => {
-      console.log(res.data);
 
       let startLatLng = new naver.maps.LatLng(Number(startLat), Number(startLng));
       let previousLatLng: naver.maps.LatLng;
@@ -296,10 +308,18 @@ const meta = ref<Meta>({
 
 <style>
 #naver-map {
-  width: 80vw;
-  height: 20vw;
+  width: 85vw;
   min-width: 400px;
-  min-height: 400px;
+  min-height: 300px;
   border: black 1px solid;
+  margin-top: 20px;
+}
+
+.map-box {
+width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>
