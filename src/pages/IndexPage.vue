@@ -157,6 +157,14 @@ function changeMapItem(category: Category) {
   selectedCategory.value = category;
   mapItems.value = mapApi.getMapItem(category);
 
+  // 기존 마커 삭제
+  categoryMarkers.value.forEach((marker) => {
+    marker.setMap(null);
+  })
+
+  // 마커 배열 비우기
+  categoryMarkers.value = [];
+
   // mapx == lng, mapy == lat
   mapItems.value.forEach((item) => {
 
@@ -192,15 +200,20 @@ function setMarker(latLng: naver.maps.LatLng, myLocation = false) {
     }
     myLocationMarker = marker;
   } else {
+
+    // 카테고리 마커 배열에 쌓기
     categoryMarkers.value.push(marker);
+
+    // 카테고리 마커 클릭 이벤트
+    naver.maps.Event.addListener(marker, 'click', function() {
+      console.log('click marker');
+      getNaverDistance(latLng);
+    });
   }
 
-  // 마커 클릭 이벤트
-  naver.maps.Event.addListener(marker, 'click', function() {
-    console.log('click marker');
-    getNaverDistance(latLng);
-  });
 }
+
+
 
 function setPolyLine(start: naver.maps.LatLng, end: naver.maps.LatLng) {
   const polyline = new naver.maps.Polyline({
