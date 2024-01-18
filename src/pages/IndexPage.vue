@@ -17,6 +17,12 @@
       />
     </q-tabs>
 
+    <div class="input-box" v-if="basicCategory === 'search'">
+      <q-input outlined v-model="searchText" label="검색어를 입력하세요"
+                @keyup.enter="changeMapItem(selectedCategory, searchText)"
+      />
+    </div>
+
     <div class="button-box" v-if="false">
       <button @click="setMyLocation">setMyLocation</button>
       <button @click="setMarker">setMarker</button>
@@ -94,6 +100,7 @@ const categories = ref(categoryApi.getCategories());
 const basicCategory = ref('search');
 const selectedCategory = ref<Category>(categories.value[0]);
 const naverMap = ref();
+const searchText = '';
 
 let myLocation = ref<naver.maps.LatLng>();
 let myLocationMarker = ref<naver.maps.Marker>();
@@ -156,7 +163,14 @@ function setMyLocation() {
   const randomLat = Number((lat + (Math.random() * 0.003)).toFixed(7));
   const randomLng = Number((lng + (Math.random() * 0.003)).toFixed(7));
 
-  console.log(randomLat, randomLng);
+  // 마커 삭제
+  deleteMarker();
+
+  // mapItems 초기화
+  mapItems.value = [];
+
+  basicCategory.value = 'search';
+
 
   myLocation.value = new naver.maps.LatLng(
     randomLat,
@@ -169,10 +183,14 @@ function setMyLocation() {
 
 // 마커 삭제
 function deleteMarker() {
-  console.log(myLocationMarker);
-  if(myLocationMarker.value) {
-    myLocationMarker.value.setMap(null);
-  }
+  // 기존 마커 삭제
+  categoryMarkers.value.forEach((marker) => {
+    marker.setMap(null);
+  })
+
+  // 마커 배열 비우기
+  categoryMarkers.value = [];
+
 }
 
 // 네이버 지도 가져오기
@@ -193,7 +211,7 @@ function getNaverMap() {
 }
 
 // 카테고리 클릭시 데이터 가져오기
-async function changeMapItem(category: Category) {
+async function changeMapItem(category: Category, searchText = '') {
   selectedCategory.value = category;
 
   if(category.categoryId.includes('0001')
@@ -202,9 +220,16 @@ async function changeMapItem(category: Category) {
   ) {
     mapItems.value = mapApi.getMapItem(category)
   } else {
+    let query;
     // 1에서 5까지 랜덤으로 숫자 생성
     const randomNumber = Math.floor(Math.random() * 5) + 1;
-    const query = '강남역 ' + category.categoryName + randomNumber;
+
+    if(searchText) {
+      query = '강남역' + searchText;
+    } else {
+      query = '강남역 ' + category.categoryName + randomNumber;
+    }
+
     await mapApi.sendSearchRequest(query, mapItems)
       .then((res) => {
         mapItems.value = res.data.items.map((item: any) => {
@@ -217,14 +242,8 @@ async function changeMapItem(category: Category) {
       });
   }
 
-
-  // 기존 마커 삭제
-  categoryMarkers.value.forEach((marker) => {
-    marker.setMap(null);
-  })
-
-  // 마커 배열 비우기
-  categoryMarkers.value = [];
+  // 마커 삭제
+  deleteMarker();
 
   // mapx == lng, mapy == lat
   mapItems.value.forEach((item) => {
@@ -283,7 +302,6 @@ function setMarker(latLng: naver.maps.LatLng, item: MapItem | null = null,
   }
 
 }
-
 
 
 function setPolyLine(start: naver.maps.LatLng, end: naver.maps.LatLng) {
@@ -434,6 +452,19 @@ function sendDirectionRequest(
   min-height: 300px;
   border: black 1px solid;
   margin-top: 20px;
+}
+
+.input-box {
+  width: 100%;
+  /*background-color: yellow;*/
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.input-box .q-input {
+  width: 85vw;
 }
 
 .map-box {
