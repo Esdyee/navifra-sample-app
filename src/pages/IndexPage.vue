@@ -12,31 +12,65 @@
       <q-tab v-for="category in categories"
              @click="changeMapItem(category)"
              :key="category.categoryId"
-             :name="category.categoryName"
-             :label="category.categoryName"
+             :name="category.label"
+             :label="category.label"
       />
     </q-tabs>
 
-    <pre>
-      {{ myLocationMarker }}
-    </pre>
-
-    <div class="button-box">
+    <div class="button-box" v-if="false">
       <button @click="setMyLocation">setMyLocation</button>
       <button @click="setMarker">setMarker</button>
       <button @click="getNaverDistance">getNaverDistance</button>
       <button @click="sendDirectionRequest">sendDirectionRequest</button>
       <button @click="deleteMarker">deleteMarker</button>
     </div>
+
     <div class="map-box">
       <div id="naver-map" class="naver-map"></div>
     </div>
-  </q-page>
 
+    <div class="list-box">
+      <q-list v-if="mapItems.length" bordered separator>
+        <q-expansion-item
+          v-for="item in mapItems"
+          :key="item.mapx+item.mapy"
+          expand-separator
+          :icon="ionLocationOutline"
+          :label="item.title"
+          :caption="item.address"
+        >
+          <q-card>
+            <q-card-section>
+              <p> 카테고리 : {{ item.category }}</p>
+              <p v-if="item.link">
+                링크 : <a :href="item.link">{{ item.link }}</a>
+              </p>
+              <p v-if="item.opentime">
+                영업시간 : {{ item.opentime }} ~ {{ item.closetime }}
+              </p>
+            </q-card-section>
+          </q-card>
+        </q-expansion-item>
+      </q-list>
+    </div>
+
+
+<!--    <pre>
+      test : {{ String(myLocationMarker) }}
+      mapItems: {{ mapItems }}
+    </pre>-->
+
+    <q-page-sticky position="bottom-right" :offset="[12, 12]">
+      <q-btn fab icon="help" color="primary" />
+    </q-page-sticky>
+  </q-page>
 
   <q-footer bordered class="bg-grey-3 text-primary">
     <q-tabs no-caps active-color="primary" indicator-color="transparent" class="text-grey-8">
-      <q-tab name="images" label="Images" />
+      <q-tab name="images" @click="setMyLocation">
+        <q-icon :name="ionLocationOutline" size="42px"/>
+        내 위치
+      </q-tab>
       <q-tab name="videos" label="Videos" />
       <q-tab name="articles" label="Articles" />
     </q-tabs>
@@ -45,12 +79,11 @@
 </template>
 
 <script setup lang="ts">
-import { Todo, Meta } from 'components/models';
-import { onMounted, ref } from 'vue';
-import { api } from 'boot/axios'
-import { CategoryApi, Category } from '../service/category-api';
-import { MapApi, MapItem } from 'src/service/map-api';
-import imgUrl from '../assets/image/red-marker.png';
+import { onMounted, ref, watch } from "vue";
+import { Category, CategoryApi } from "../service/category-api";
+import { MapApi, MapItem } from "src/service/map-api";
+import imgUrl from "../assets/image/red-marker.png";
+import { ionLocationOutline } from "@quasar/extras/ionicons-v6";
 
 // call service 부분
 const categoryApi = new CategoryApi();
@@ -62,13 +95,17 @@ const basicCategory = ref('search');
 const selectedCategory = ref<Category>(categories.value[0]);
 const naverMap = ref();
 
-let myLocation: naver.maps.LatLng;
-let myLocationMarker: naver.maps.Marker;
+let myLocation = ref<naver.maps.LatLng>();
+let myLocationMarker = ref<naver.maps.Marker>();
 let map: naver.maps.Map;
 
 const mapItems = ref<MapItem[]>([]); // 카테고리의 map item 저장
 const categoryMarkers = ref<naver.maps.Marker[]>([]); // 카테고리별 마커 저장
 const polylines = ref<naver.maps.Polyline[]>([]); // polyline 이력 저장
+
+watch(mapItems, (value) => {
+  console.log('mapItems', value);
+})
 
 onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
@@ -77,24 +114,22 @@ onMounted(() => {
 
 
 // 좌표간 거리 가져오기
-async function getNaverDistance(endpoint: naver.maps.LatLng) {
+async function getNaverDistance(endpoint: naver.maps.LatLng,
+                                mapItem: MapItem) {
 
-  let start = myLocation;
-  let end;
+  let start, end;
 
-  console.log(start, endpoint);
+  if(!myLocation.value) {
+    start = new naver.maps.LatLng(37.4979518, 127.027619);
+  } else {
+    start = myLocation.value;
+  }
 
   if(!endpoint) {
     end = new naver.maps.LatLng(37.4986080, 127.0287482);
   } else {
     end = endpoint;
   }
-
-  // setMarker(start);
-  // setMarker(end);
-
-  const startlower = start.destinationPoint(180, 1500);
-  const endlower = end.destinationPoint(180, 1500);
 
 
   const projection = map.getProjection();
@@ -105,7 +140,8 @@ async function getNaverDistance(endpoint: naver.maps.LatLng) {
 
   await sendDirectionRequest(
     start,
-    end
+    end,
+    mapItem
   )
 
 }
@@ -117,29 +153,34 @@ function setMyLocation() {
   const lat = 37.4979518;
   const lng = 127.027619;
 
-  const randomLat = Number((lat + (Math.random() * 0.01)).toFixed(7));
-  const randomLng = Number((lng + (Math.random() * 0.01)).toFixed(7));
+  const randomLat = Number((lat + (Math.random() * 0.003)).toFixed(7));
+  const randomLng = Number((lng + (Math.random() * 0.003)).toFixed(7));
 
   console.log(randomLat, randomLng);
 
-  myLocation = new naver.maps.LatLng(
+  myLocation.value = new naver.maps.LatLng(
     randomLat,
     randomLng
   );
 
-  map.setCenter(myLocation);
-  setMarker(myLocation, true);
+  map.setCenter(myLocation.value);
+  setMarker(myLocation.value, null, true);
 }
 
+// 마커 삭제
 function deleteMarker() {
   console.log(myLocationMarker);
-  myLocationMarker.setMap(null);
+  if(myLocationMarker.value) {
+    myLocationMarker.value.setMap(null);
+  }
 }
 
 // 네이버 지도 가져오기
 function getNaverMap() {
   if (window.naver && window.naver.maps) {
+
     map = new naver.maps.Map('naver-map', {
+      center: new naver.maps.LatLng(37.4979518, 127.027619),
       zoom: 16,
       mapTypeId: naver.maps.MapTypeId.NORMAL
     });
@@ -152,10 +193,30 @@ function getNaverMap() {
 }
 
 // 카테고리 클릭시 데이터 가져오기
-function changeMapItem(category: Category) {
-  console.log(category);
+async function changeMapItem(category: Category) {
   selectedCategory.value = category;
-  mapItems.value = mapApi.getMapItem(category);
+
+  if(category.categoryId.includes('0001')
+    || category.categoryId.includes('0002')
+    || category.categoryId.includes('0003')
+  ) {
+    mapItems.value = mapApi.getMapItem(category)
+  } else {
+    // 1에서 5까지 랜덤으로 숫자 생성
+    const randomNumber = Math.floor(Math.random() * 5) + 1;
+    const query = '강남역 ' + category.categoryName + randomNumber;
+    await mapApi.sendSearchRequest(query, mapItems)
+      .then((res) => {
+        mapItems.value = res.data.items.map((item: any) => {
+          item.title = stripHtml(item.title)
+          return item;
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
 
   // 기존 마커 삭제
   categoryMarkers.value.forEach((marker) => {
@@ -174,14 +235,15 @@ function changeMapItem(category: Category) {
     );
 
     // 마커 찍기
-    setMarker(latLng);
+    setMarker(latLng, item);
 
   })
 }
 
 
 // 마커 생성
-function setMarker(latLng: naver.maps.LatLng, myLocation = false) {
+function setMarker(latLng: naver.maps.LatLng, item: MapItem | null = null,
+                   myLocation = false) {
 
   let marker = new naver.maps.Marker({
     position: latLng,
@@ -194,12 +256,13 @@ function setMarker(latLng: naver.maps.LatLng, myLocation = false) {
     } : ''
   });
 
-  if(myLocation) {
-    if(myLocationMarker) {
-      myLocationMarker.setMap(null);
+  if(myLocation) { // 내 위치 마커
+    if(myLocationMarker.value) {
+      myLocationMarker.value.setMap(null);
     }
-    myLocationMarker = marker;
-  } else {
+    myLocationMarker.value = marker;
+
+  } else { // 카테고리 마커
 
     // 카테고리 마커 배열에 쌓기
     categoryMarkers.value.push(marker);
@@ -207,7 +270,15 @@ function setMarker(latLng: naver.maps.LatLng, myLocation = false) {
     // 카테고리 마커 클릭 이벤트
     naver.maps.Event.addListener(marker, 'click', function() {
       console.log('click marker');
-      getNaverDistance(latLng);
+
+      if(!myLocationMarker.value) {
+        alert('내 위치를 먼저 설정해주세요.');
+        return;
+      }
+
+      if(item) {
+        getNaverDistance(latLng, item);
+      }
     });
   }
 
@@ -257,40 +328,33 @@ function stringToLng(str: string): number {
   return Number(lng);
 }
 
-
-// 네이버 API 카테고리 검색 (실제 API 서버)
-function sendSearchRequest() {
-  api.get('/v1/search/local.json?query=%EC%A3%BC%EC%8B%9D&display=10&start=1&sort=random', {
-    headers: {
-      'X-Naver-Client-Id': process.env.X_NAVER_CLIENT_ID,
-      'X-Naver-Client-Secret': process.env.X_NAVER_CLIENT_SECRET,
-    }
-  })
-    .then((res) => {
-      console.log(res.data);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
+// API에서 html로 오는 부분 제거
+function stripHtml(html: string) {
+  var tempDiv = document.createElement("div");
+  tempDiv.innerHTML = html;
+  return tempDiv.textContent || tempDiv.innerText || "";
 }
+
 
 // 경로 검색 요청
 function sendDirectionRequest(
   startLngLat: naver.maps.LatLng,
-  endLngLat: naver.maps.LatLng
+  endLngLat: naver.maps.LatLng,
+  mapItem: MapItem
 ) {
 
+  // API에 보낼 파라미터 셋팅
   const startLng = startLngLat.lng().toString();
   const startLat = startLngLat.lat().toString();
   const endLng = endLngLat.lng().toString();
   const endLat = endLngLat.lat().toString();
 
-  return api.get(`/map-direction/v1/driving?start=${startLng},${startLat}&goal=${endLng},${endLat}&option=trafast`, {
-    headers: {
-      'X-NCP-APIGW-API-KEY-ID': process.env.X_NCP_APIGW_API_KEY_ID,
-      'X-NCP-APIGW-API-KEY': process.env.X_NCP_APIGW_API_KEY,
-    }
-  })
+  return mapApi.sendDirectionRequest(
+    startLng,
+    startLat,
+    endLng,
+    endLat
+  )
     .then((res) => {
 
       let startLatLng = new naver.maps.LatLng(Number(startLat), Number(startLng));
@@ -323,7 +387,6 @@ function sendDirectionRequest(
             }
           }
 
-
           // set polyline
           setPolyLine(
             previousLatLng,
@@ -331,15 +394,26 @@ function sendDirectionRequest(
           )
         })
 
-      const { distance, speed } = res.data.route.trafast[0].section[0]
-
+      const distance = res.data.route.trafast[0].summary.distance;
+      const speed = res.data.route.trafast[0].section[0].speed
 
       // InfoWindow(결과안내모달) 열기
+
+      let opentimeString;
+
+      if(mapItem.opentime) {
+        opentimeString = `<p>영업시간 : ${mapItem.opentime} ~ ${mapItem.closetime}</p>`;
+      } else {
+        opentimeString = '';
+      }
+
       setInfoWindow(
         `
           <div class="info-window" style="padding: 10px">
-            <p>distance: ${distance}(M)</p>
-            <p>speed: ${speed}(km/h)</p>
+            <p>${mapItem.title}</p>
+            ${opentimeString}
+            <p>거리: ${distance}(M)</p>
+            <p>속도: ${speed}(km/h)</p>
           </div>
           `
       ).open(map, finalLatLng);
@@ -355,7 +429,7 @@ function sendDirectionRequest(
 <style>
 #naver-map {
   width: 85vw;
-  height: 70vh;
+  height: 50vh;
   min-width: 400px;
   min-height: 300px;
   border: black 1px solid;
@@ -368,6 +442,38 @@ width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.list-box {
+  width: 100%;
+  height: 100%;
+  /*background-color: yellow;*/
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.list-box .q-list {
+  width: 85vw;
+  background-color: #f5f5f5;
+  margin-bottom: 20px;
+}
+
+.list-box .q-card p {
+  font-family: Arial, sans-serif;
+  margin-bottom: 3px;
+  color: #333;
+}
+
+.list-box .q-card a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.list-box .q-card a:hover {
+  text-decoration: underline;
+  color: #0056b3;
 }
 
 .info-window p {
