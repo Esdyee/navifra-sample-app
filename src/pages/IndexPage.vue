@@ -77,8 +77,13 @@
         <q-icon :name="ionLocationOutline" size="42px"/>
         내 위치
       </q-tab>
-      <q-tab name="videos" label="Videos" />
-      <q-tab name="articles" label="Articles" />
+      <q-tab name="login" @click="goLogin">
+        <q-icon :name="ionKey" size="42px"/>
+        로그인
+      </q-tab>
+      <q-tab name="articles">
+        Articles
+      </q-tab>
     </q-tabs>
   </q-footer>
 
@@ -86,14 +91,16 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
+import { useRouter } from 'vue-router';
 import { Category, CategoryApi } from "../service/category-api";
 import { MapApi, MapItem } from "src/service/map-api";
 import imgUrl from "../assets/image/red-marker.png";
-import { ionLocationOutline } from "@quasar/extras/ionicons-v6";
+import { ionLocationOutline, ionKey } from "@quasar/extras/ionicons-v6";
 
 // call service 부분
 const categoryApi = new CategoryApi();
 const mapApi = new MapApi();
+const router = useRouter();
 
 // data 부분
 const categories = ref(categoryApi.getCategories());
@@ -118,6 +125,8 @@ onMounted(() => {
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
   getNaverMap();
 })
+
+
 
 
 // 좌표간 거리 가져오기
@@ -179,6 +188,10 @@ function setMyLocation() {
 
   map.setCenter(myLocation.value);
   setMarker(myLocation.value, null, true);
+}
+
+function goLogin() {
+  router.push('/login');
 }
 
 // 마커 삭제
