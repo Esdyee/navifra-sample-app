@@ -1,31 +1,80 @@
 <template>
-  <p>로그인 페이지</p>
+  <div class="layout">
+    <div class='login-box' v-if="!isLogin">
+      <div id='naverOauthLogin' @click='naverCallback'>
+        <img src="../assets/image/naver/btnG_완성형.png" />
+      </div>
+    </div>
+    <div class="profile-box" v-if="isLogin">
+      <div class="text-center">
+        <q-avatar
+          v-if='loginStore.getMyInfo?.profileImage'
+          size='150px'
+          class='q-mb-md'>
+          <img :src='loginStore.getMyInfo?.profileImage' alt="프로필 이미지"/>
+        </q-avatar>
+      </div>
 
-  <div class='login-box'>
-    <div id='naverOauthLogin' @click='naverCallback'>팝업 테스트</div>
-    <div id='naverIdLogin'>로그인</div>
+      <q-list bordered separator>
 
-<!--    <div id='naverIdLogout'
-         v-if='isNaverLogin'
-         @click='setNaverLogout'>로그아웃</div>-->
-    <!-- 네이버 로그인 버튼 노출 영역 -->
-<!--    <div id='naver_id_login'></div>-->
+        <q-item v-ripple>
+          <q-item-section class="col-3">
+            <q-item-label>이름</q-item-label>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ loginStore.getMyInfo?.name }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-ripple>
+          <q-item-section class="col-3">
+            <q-item-label>나이</q-item-label>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ loginStore.getMyInfo?.age }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-ripple>
+          <q-item-section class="col-3">
+            <q-item-label>성별</q-item-label>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ loginStore.getMyInfo?.gender }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item v-ripple>
+          <q-item-section class="col-3">
+            <q-item-label>메일</q-item-label>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ loginStore.getMyInfo?.email }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+      </q-list>
+    </div>
   </div>
 
+  <FooterLayout />
 </template>
 
 <script setup lang='ts'>
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from 'boot/axios';
+import { useLoginStore } from '../stores/login-store';
+import FooterLayout from "layouts/FooterLayout.vue";
 
 const route = useRoute();
+const loginStore = useLoginStore();
+
 
 let naverLogin: any;
 let naverLogout: any;
 let naverOauthToken: any;
-let isNaverLogin = ref(false);
-
+let isLogin = ref(false);
 
 let authorizeState = ({
   response_type: 'code',
@@ -37,43 +86,53 @@ let authorizeState = ({
   code: '',
 })
 
-let tokenState = ({
-  access_token: '',
-  refresh_token: '',
-  token_type: '',
-  expires_in: '',
-  error: '',
-  error_description: ''
-})
-
-let myInfo = ({
-  id: '',
-  nickname: '',
-  age: '',
-  gender: '',
-  email: '',
-  name: ''
-})
-
+type PostMessage = {
+  code: string;
+  state: string;
+}
 
 onMounted(() => {
-  naverOauthToken = localStorage.getItem('com.naver.nid.oauth.state_token');
-  if(naverOauthToken) {
-    isNaverLogin.value = true;
-  }
 
-  if(typeof route.query.code === 'string') {
-    authorizeState.code = route.query.code;
+  checkLogin();
+
+  // 팝업창으로 열렸을 경우
+  if(window.opener) {
+    // code만 부모에게 넘기고 닫기
+    if(typeof route.query.code === 'string') {
+      console.log('route.query.code => ', route.query.code);
+
+      window.opener.postMessage(
+        {
+          code: route.query.code,
+          state: route.query.state
+        }, '*')
+
+      window.close();
+    }
   }
 
   if(authorizeState.code.length > 0) {
+    console.log('authorizeState.code => ', authorizeState.code)
     getNaverToken();
   }
 
+  window.addEventListener('message', getMessage, false);
   // getNaverLogin();
   // naverCallback();
 
 })
+
+const getMessage = (e: any) => {
+  console.log('e => ', e);
+  const data: PostMessage = e.data;
+
+  if(e.data) {
+    authorizeState.code = data.code;
+    authorizeState.state = data.state;
+    getNaverToken();
+  }
+
+}
 
 // callback url
 const naverCallback = async() => {
@@ -88,8 +147,15 @@ const naverCallback = async() => {
   // naverUserInfo();
 }
 
+function checkLogin() {
+  if(loginStore.getToken) {
+    isLogin.value = true;
+  }
+}
+
 // 네이버 토큰 가져오기
 async function getNaverToken() {
+  console.log('getNaverToken');
   const url = `/oauth2.0/token?grant_type=${authorizeState.grant_type}`
     + `&client_id=${authorizeState.naverClientId}`
     + `&client_secret=${authorizeState.clientSecret}`
@@ -98,47 +164,37 @@ async function getNaverToken() {
 
   await api.get(url)
     .then((res) => {
-      console.log('res => ', res);
-      tokenState.access_token = res.data.access_token;
-      tokenState.refresh_token = res.data.refresh_token;
-      tokenState.token_type = res.data.token_type;
-      tokenState.expires_in = res.data.expires_in;
-      tokenState.error = res.data.error;
-      tokenState.error_description = res.data.error_description;
-
+      console.log('getToken res => ', res);
+      loginStore.setToken(res.data);
       getNaverProfile();
     })
     .catch((err) => {
       console.log('err => ', err);
     })
 
-
 }
 
 // 네이버 프로필 가져오기
 async function getNaverProfile() {
   const url = `/v1/nid/me`;
-  let header = "Bearer " + tokenState.access_token;
-  const headers = {"Authorization": header};
-  console.log("headers => ", headers);
+
+  if(loginStore.getToken) {
+    let header = 'Bearer ' + loginStore.getToken.access_token;
+    const headers = {'Authorization': header};
+    console.log('headers => ', headers);
 
 
-  await api.get(url, { headers })
-    .then((res) => {
-      console.log('res => ', res);
-      myInfo.id = res.data.response.id;
-      myInfo.nickname = res.data.response.nickname;
-      myInfo.age = res.data.response.age;
-      myInfo.email = res.data.response.email;
-      myInfo.name = res.data.response.name;
-      myInfo.gender = res.data.response.gender;
-    })
-    .catch((err) => {
-      console.log('err => ', err);
-    })
+    await api.get(url, { headers })
+      .then((res) => {
+        console.log('get Profile res => ', res);
+        loginStore.setMyInfo(res.data.response)
+        isLogin.value = true;
+      })
+      .catch((err) => {
+        console.log('err => ', err);
+      })
+  }
 
-  // // 변수에 값 넣기
-  // state.userid = data.response.email;
 }
 
 // 로그아웃
@@ -168,30 +224,56 @@ function setLoginStatus(){
 
 <style scoped>
 
+.layout {
+  width: 100%;
+  height: 85vh;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  /*background-color: red;*/
+}
+
 .login-box {
   width: 100%;
   display: flex;
   justify-content: center;
   flex-direction: column;
-  background-color: yellow;
+  /*background-color: yellow;*/
 }
 
 #naverOauthLogin {
   height: 40px;
   margin: 0 auto;
-  background-color: red;
+}
+
+#naverOauthLogin img {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
 }
 
 #naverIdLogin {
   height: 40px;
   margin: 0 auto;
-  background-color: red;
+  /*background-color: red;*/
 }
 
 #naverIdLogout {
   height: 40px;
   margin: 0 auto;
-  background-color: green;
+  /*background-color: green;*/
+}
+
+.profile-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  /*background-color: beige;*/
+}
+
+.profile-box .q-item-label {
+
 }
 
 </style>

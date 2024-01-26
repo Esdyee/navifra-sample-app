@@ -12,4 +12,7 @@ interface Window {
   naver: {
     LoginWithNaverId: any
   };
+  naverMap: any;
+  naverLogin: any;
+  naverPay: any;
 }

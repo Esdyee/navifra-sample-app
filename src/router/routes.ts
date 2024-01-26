@@ -8,9 +8,15 @@ const routes: RouteRecordRaw[] = [
   },
 
   {
-    path: '/Login',
+    path: '/login',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/LoginPage.vue') }],
+  },
+
+  {
+    path: '/payment',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('pages/PaymentPage.vue') }],
   },
 
   // Always leave this as last one,

@@ -1,57 +1,62 @@
 <template>
-  <q-page class="items-center justify-evenly">
+  <q-page class='items-center justify-evenly'>
     <q-tabs
-      v-model="basicCategory"
+      v-model='basicCategory'
       dense
-      class="text-grey"
-      active-color="primary"
-      indicator-color="primary"
-      align="justify"
+      class='text-grey'
+      active-color='primary'
+      indicator-color='primary'
+      align='justify'
     >
-      <q-tab name="search" label="검색" />
-      <q-tab v-for="category in categories"
-             @click="changeMapItem(category)"
-             :key="category.categoryId"
-             :name="category.label"
-             :label="category.label"
+      <q-tab name='search' label='검색' />
+      <q-tab v-for='category in categories'
+             @click='changeMapItem(category)'
+             :key='category.categoryId'
+             :name='category.label'
+             :label='category.label'
       />
     </q-tabs>
 
-    <div class="input-box" v-if="basicCategory === 'search'">
-      <q-input outlined v-model="searchText" label="검색어를 입력하세요"
-                @keyup.enter="changeMapItem(selectedCategory, searchText)"
+    <div class="button-box">
+      <q-btn style="width: 85%"
+        @click="setMyLocation">내 위치 설정</q-btn>
+    </div>
+    <div class='input-box' v-if="basicCategory === 'search'">
+      <q-input
+        outlined v-model='searchText' label='검색어를 입력하세요'
+        @keyup.enter='changeMapItem(selectedCategory, searchText)'
       />
     </div>
 
-    <div class="button-box" v-if="false">
-      <button @click="setMyLocation">setMyLocation</button>
-      <button @click="setMarker">setMarker</button>
-      <button @click="getNaverDistance">getNaverDistance</button>
-      <button @click="sendDirectionRequest">sendDirectionRequest</button>
-      <button @click="deleteMarker">deleteMarker</button>
+    <div class='button-box' v-if='false'>
+      <button @click='setMyLocation'>setMyLocation</button>
+      <button @click='setMarker'>setMarker</button>
+      <button @click='getNaverDistance'>getNaverDistance</button>
+      <button @click='sendDirectionRequest'>sendDirectionRequest</button>
+      <button @click='deleteMarker'>deleteMarker</button>
     </div>
 
-    <div class="map-box">
-      <div id="naver-map" class="naver-map"></div>
+    <div class='map-box'>
+      <div id='naver-map' class='naver-map'></div>
     </div>
 
-    <div class="list-box">
-      <q-list v-if="mapItems.length" bordered separator>
+    <div class='list-box'>
+      <q-list v-if='mapItems.length' bordered separator>
         <q-expansion-item
-          v-for="item in mapItems"
-          :key="item.mapx+item.mapy"
+          v-for='item in mapItems'
+          :key='item.mapx+item.mapy'
           expand-separator
-          :icon="ionLocationOutline"
-          :label="item.title"
-          :caption="item.address"
+          :icon='ionLocationOutline'
+          :label='item.title'
+          :caption='item.address'
         >
           <q-card>
             <q-card-section>
               <p> 카테고리 : {{ item.category }}</p>
-              <p v-if="item.link">
-                링크 : <a :href="item.link">{{ item.link }}</a>
+              <p v-if='item.link'>
+                링크 : <a :href='item.link'>{{ item.link }}</a>
               </p>
-              <p v-if="item.opentime">
+              <p v-if='item.opentime'>
                 영업시간 : {{ item.opentime }} ~ {{ item.closetime }}
               </p>
             </q-card-section>
@@ -66,41 +71,44 @@
       mapItems: {{ mapItems }}
     </pre>-->
 
-    <q-page-sticky position="bottom-right" :offset="[12, 12]">
-      <q-btn fab icon="help" color="primary" />
+    <q-page-sticky position='bottom-right' :offset='[12, 12]'>
+      <q-btn fab icon='help' color='primary' />
     </q-page-sticky>
   </q-page>
 
-  <q-footer bordered class="bg-grey-3 text-primary">
-    <q-tabs no-caps active-color="primary" indicator-color="transparent" class="text-grey-8">
-      <q-tab name="images" @click="setMyLocation">
-        <q-icon :name="ionLocationOutline" size="42px"/>
-        내 위치
-      </q-tab>
-      <q-tab name="login" @click="goLogin">
-        <q-icon :name="ionKey" size="42px"/>
-        로그인
-      </q-tab>
-      <q-tab name="articles">
-        Articles
-      </q-tab>
-    </q-tabs>
-  </q-footer>
+  <FooterLayout />
+<!--  <q-footer bordered class='bg-grey-3 text-primary'>-->
+<!--    <q-tabs no-caps active-color='primary' indicator-color='transparent' class='text-grey-8'>-->
+<!--      <q-tab name='images' @click='setMyLocation'>-->
+<!--        <q-icon :name='ionLocationOutline' size='42px'/>-->
+<!--        내 위치-->
+<!--      </q-tab>-->
+<!--      <q-tab name='login' @click='goLogin'>-->
+<!--        <q-icon :name='ionKey' size='42px'/>-->
+<!--        로그인-->
+<!--      </q-tab>-->
+<!--      <q-tab name='articles'>-->
+<!--        Articles-->
+<!--      </q-tab>-->
+<!--    </q-tabs>-->
+<!--  </q-footer>-->
 
 </template>
 
-<script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+<script setup lang='ts'>
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Category, CategoryApi } from "../service/category-api";
-import { MapApi, MapItem } from "src/service/map-api";
-import imgUrl from "../assets/image/red-marker.png";
-import { ionLocationOutline, ionKey } from "@quasar/extras/ionicons-v6";
+import { Category, CategoryApi } from '../service/category-api';
+import { MapApi, MapItem } from 'src/service/map-api';
+import imgUrl from '../assets/image/red-marker.png';
+import { ionLocationOutline, ionKey } from '@quasar/extras/ionicons-v6';
+import FooterLayout from "layouts/FooterLayout.vue";
 
 // call service 부분
 const categoryApi = new CategoryApi();
 const mapApi = new MapApi();
 const router = useRouter();
+
 
 // data 부분
 const categories = ref(categoryApi.getCategories());
@@ -122,11 +130,10 @@ watch(mapItems, (value) => {
 })
 
 onMounted(() => {
+  console.log('onMounted');
   // const naverMapTest: HTMLElement = document.getElementById('naver-map') as HTMLElement;
   getNaverMap();
 })
-
-
 
 
 // 좌표간 거리 가져오기
@@ -209,13 +216,14 @@ function deleteMarker() {
 // 네이버 지도 가져오기
 function getNaverMap() {
   if (window.naver && window.naver.maps) {
-
+    console.log('loaded naver map');
     map = new naver.maps.Map('naver-map', {
       center: new naver.maps.LatLng(37.4979518, 127.027619),
       zoom: 16,
       mapTypeId: naver.maps.MapTypeId.NORMAL
     });
   } else {
+    console.log('not loaded naver map');
     // 초기 로딩시에 전역 naver가 없으면 1초 뒤에 다시 실행
     setTimeout(() => {
       getNaverMap();
@@ -361,9 +369,9 @@ function stringToLng(str: string): number {
 
 // API에서 html로 오는 부분 제거
 function stripHtml(html: string) {
-  var tempDiv = document.createElement("div");
+  var tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
-  return tempDiv.textContent || tempDiv.innerText || "";
+  return tempDiv.textContent || tempDiv.innerText || '';
 }
 
 
@@ -440,7 +448,7 @@ function sendDirectionRequest(
 
       setInfoWindow(
         `
-          <div class="info-window" style="padding: 10px">
+          <div class='info-window' style='padding: 10px'>
             <p>${mapItem.title}</p>
             ${opentimeString}
             <p>거리: ${distance}(M)</p>
@@ -467,6 +475,14 @@ function sendDirectionRequest(
   margin-top: 20px;
 }
 
+.button-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
 .input-box {
   width: 100%;
   /*background-color: yellow;*/
@@ -481,7 +497,7 @@ function sendDirectionRequest(
 }
 
 .map-box {
-width: 100%;
+  width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
