@@ -1,31 +1,20 @@
 <template>
-  <div id="payment-method">
+  <div id='payment-method'>
   </div>
   <button
-    className="btn primary w-100"
-    @click="async () => {
-             const paymentWidget = paymentWidgetRef.current;
-                try {
-                  await paymentWidget?.requestPayment({
-                    orderId: generateRandomString(),
-                    orderName: '토스 티셔츠 외 2건',
-                    customerName: '김토스',
-                    customerEmail: 'customer123@gmail.com',
-                    successUrl: window.location.origin + '/sandbox/success' + window.location.search,
-                    failUrl: window.location.origin + '/sandbox/fail' + window.location.search
-                  });
-                } catch (error) {
-
-                }
-            }"
+    className='btn primary w-100'
+    @click='startPayment'
   >결제하기</button>
   <FooterLayout />
 </template>
 
-<script setup lang="ts">
+<script setup lang='ts'>
 import { loadPaymentWidget, ANONYMOUS } from '@tosspayments/payment-widget-sdk'
-import FooterLayout from "layouts/FooterLayout.vue";
-import { onMounted } from "vue";
+import FooterLayout from 'layouts/FooterLayout.vue';
+import { onMounted, ref } from 'vue';
+const paymentWidgetRef = ref(null);
+const paymentMethodsWidgetRef = ref(null);
+const agreementWidgetRef = ref(null);
 const clientKey = process.env.TOSS_CLIENT_KEY
 const customerKey = process.env.TOSS_CUSTOMER_KEY
 
@@ -71,7 +60,7 @@ function startPayment() {
       const paymentMethodsWidget = paymentWidget.renderPaymentMethods(
         '#payment-method',
         {
-          value: 10000,
+          value: 20000,
           currency: 'KRW',
           country: 'KR',
         },
@@ -84,8 +73,15 @@ function startPayment() {
 
 }
 
-async
+async function goPayment() {
+  const paymentWidget = paymentWidgetRef.value;
 
+  try {
+
+  } catch {
+
+  }
+}
 
 </script>
 
