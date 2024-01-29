@@ -1,10 +1,12 @@
 <template>
-  <div id='payment-method'>
+  <div id="payment-method">
+  <div id="agreement" class="w-100" />
   </div>
-  <button
-    className='btn primary w-100'
-    @click='startPayment'
-  >결제하기</button>
+  <div class="button-box content-center">
+    <q-btn color="primary" class="center"
+      @click='startPayment'
+    >결제하기</q-btn>
+  </div>
   <FooterLayout />
 </template>
 
@@ -12,7 +14,7 @@
 import { loadPaymentWidget, ANONYMOUS } from '@tosspayments/payment-widget-sdk'
 import FooterLayout from 'layouts/FooterLayout.vue';
 import { onMounted, ref } from 'vue';
-const paymentWidgetRef = ref(null);
+const paymentWidgetRef: any = ref(null);
 const paymentMethodsWidgetRef = ref(null);
 const agreementWidgetRef = ref(null);
 const clientKey = process.env.TOSS_CLIENT_KEY
@@ -23,6 +25,8 @@ onMounted(() => {
   main()
 })
 
+const generateRandomString = () => window.btoa(Math.random().toString()).slice(0, 20);
+
 // 결제위젯 초기화: async/await을 사용하는 경우
 async function main() {
   console.log(clientKey, customerKey);
@@ -30,47 +34,44 @@ async function main() {
     throw new Error('clientKey or customerKey is not defined')
   }
 
-  // async await 사용하는 경우
-  const paymentWidget = await loadPaymentWidget(
-    clientKey ? clientKey : '',
-    customerKey ? customerKey : '')
-    .then(paymentWidget => {
-      const paymentMethodsWidget = paymentWidget.renderPaymentMethods(
-        '#payment-method',
-        {
-          value: 10000,
-          currency: 'KRW',
-          country: 'KR',
-        },
-        { variantKey: 'widgetA' }
-      )
-    }).finally(() => {
-      console.log('finally')
-      console.log(clientKey, customerKey);
-    })
+  console.log('start load payment widget');
+
+  const paymentWidget = await loadPaymentWidget(clientKey,  ANONYMOUS); // 비회원 customerKey
+
+  if (paymentWidgetRef.value == null) {
+    paymentWidgetRef.value = paymentWidget;
+  }
+
+
+  const paymentMethodsWidget = paymentWidgetRef.value.renderPaymentMethods(
+    '#payment-method',
+    { value: 1000 },
+    { variantKey: 'DEFAULT'}
+  );
+
+  agreementWidgetRef.value = paymentWidgetRef.value.renderAgreement('#agreement', { variantKey: 'DEFAULT' });
+
+  paymentMethodsWidgetRef.value = paymentMethodsWidget;
 
 }
 
-function startPayment() {
-  // 결제위젯 초기화: Promise를 사용하는 경우
-  loadPaymentWidget(
-    clientKey ? clientKey : '',
-    customerKey ? customerKey : '')
-    .then(paymentWidget => {
-      const paymentMethodsWidget = paymentWidget.renderPaymentMethods(
-        '#payment-method',
-        {
-          value: 20000,
-          currency: 'KRW',
-          country: 'KR',
-        },
-        { variantKey: 'widgetA' }
-      )
-    }).finally(() => {
-    console.log('finally')
-    console.log(clientKey, customerKey);
-  })
+async function startPayment() {
+    const paymentWidget = paymentWidgetRef.value;
 
+    console.log(paymentWidget);
+
+    try {
+      await paymentWidget?.requestPayment({
+        orderId: generateRandomString(),
+        orderName: '토스 티셔츠 외 2건',
+        customerName: '김토스',
+        customerEmail: 'customer123@gmail.com',
+        successUrl: window.location.origin,
+        failUrl: window.location.origin + '/payment'
+      });
+    } catch (error) {
+      // TODO: 에러 처리
+    }
 }
 
 async function goPayment() {
