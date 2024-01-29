@@ -71,27 +71,18 @@
       mapItems: {{ mapItems }}
     </pre>-->
 
-    <q-page-sticky position='bottom-right' :offset='[12, 12]'>
+    <q-page-sticky position='bottom-right' :offset='[12, 12]'
+      @click="termsVisible = !termsVisible"
+    >
       <q-btn fab icon='help' color='primary' />
     </q-page-sticky>
+
+  <TermsDialog :visible="termsVisible" />
+
   </q-page>
 
   <FooterLayout />
-<!--  <q-footer bordered class='bg-grey-3 text-primary'>-->
-<!--    <q-tabs no-caps active-color='primary' indicator-color='transparent' class='text-grey-8'>-->
-<!--      <q-tab name='images' @click='setMyLocation'>-->
-<!--        <q-icon :name='ionLocationOutline' size='42px'/>-->
-<!--        내 위치-->
-<!--      </q-tab>-->
-<!--      <q-tab name='login' @click='goLogin'>-->
-<!--        <q-icon :name='ionKey' size='42px'/>-->
-<!--        로그인-->
-<!--      </q-tab>-->
-<!--      <q-tab name='articles'>-->
-<!--        Articles-->
-<!--      </q-tab>-->
-<!--    </q-tabs>-->
-<!--  </q-footer>-->
+
 
 </template>
 
@@ -102,7 +93,8 @@ import { Category, CategoryApi } from '../service/category-api';
 import { MapApi, MapItem } from 'src/service/map-api';
 import imgUrl from '../assets/image/red-marker.png';
 import { ionLocationOutline, ionKey } from '@quasar/extras/ionicons-v6';
-import FooterLayout from "layouts/FooterLayout.vue";
+import FooterLayout from 'layouts/FooterLayout.vue';
+import TermsDialog from 'pages/TermsDialog.vue';
 
 // call service 부분
 const categoryApi = new CategoryApi();
@@ -117,10 +109,13 @@ const selectedCategory = ref<Category>(categories.value[0]);
 const naverMap = ref();
 const searchText = '';
 
+// 약관 버튼
+const termsVisible = ref(false);
+
+// 지도 관련 데이터
 let myLocation = ref<naver.maps.LatLng>();
 let myLocationMarker = ref<naver.maps.Marker>();
 let map: naver.maps.Map;
-
 const mapItems = ref<MapItem[]>([]); // 카테고리의 map item 저장
 const categoryMarkers = ref<naver.maps.Marker[]>([]); // 카테고리별 마커 저장
 const polylines = ref<naver.maps.Polyline[]>([]); // polyline 이력 저장
