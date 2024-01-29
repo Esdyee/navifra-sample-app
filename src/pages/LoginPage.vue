@@ -126,7 +126,7 @@ const getMessage = (e: any) => {
   console.log('e => ', e);
   const data: PostMessage = e.data;
 
-  if(e.data) {
+  if(e.data?.code) {
     authorizeState.code = data.code;
     authorizeState.state = data.state;
     getNaverToken();
@@ -136,7 +136,7 @@ const getMessage = (e: any) => {
 
 // callback url
 const naverCallback = async() => {
-
+  console.log('naverCallback', authorizeState);
   const url = `https://nid.naver.com/oauth2.0/authorize?response_type=${authorizeState.response_type}`
     + `&client_id=${authorizeState.naverClientId}`
     + `&state=${authorizeState.state}`
@@ -148,7 +148,7 @@ const naverCallback = async() => {
 }
 
 function checkLogin() {
-  if(loginStore.getToken) {
+  if(loginStore.getToken?.access_token) {
     isLogin.value = true;
   }
 }
@@ -177,8 +177,8 @@ async function getNaverToken() {
 // 네이버 프로필 가져오기
 async function getNaverProfile() {
   const url = `/v1/nid/me`;
-
-  if(loginStore.getToken) {
+  console.log('get_access_token', loginStore.getToken);
+  if(loginStore.getToken?.access_token) {
     let header = 'Bearer ' + loginStore.getToken.access_token;
     const headers = {'Authorization': header};
     console.log('headers => ', headers);
