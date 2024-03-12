@@ -20,8 +20,6 @@
     <div class="button-box">
       <q-btn
         @click="setMyLocation">내 위치 설정</q-btn>
-      <q-btn
-        @click="setMyLocation">딥링크 테스트</q-btn>
     </div>
     <div class='input-box' v-if="basicCategory === 'search'">
       <q-input
