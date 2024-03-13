@@ -56,8 +56,7 @@
       </q-list>
     </div>
   </div>
-
-  <FooterLayout />
+  
 </template>
 
 <script setup lang='ts'>
@@ -65,7 +64,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from 'boot/axios';
 import { useLoginStore } from '../stores/login-store';
-import FooterLayout from "layouts/FooterLayout.vue";
+import FooterLayout from 'layouts/FooterLayout.vue';
 
 const route = useRoute();
 const loginStore = useLoginStore();

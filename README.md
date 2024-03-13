@@ -1,41 +1,9 @@
 # Quasar App (navifra-test3)
 
-A Quasar Project
+## 프로젝트 실행하는법
 
-## Install the dependencies
-```bash
-yarn
-# or
-npm install
-```
+1. terminal에서 `npm install` 명령어를 실행하여 필요한 패키지를 설치합니다.
+   (가급적이면 npm ci를 사용하여 package-lock.json에 명시된 버전으로 설치하는 것을 권장합니다.)
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
-quasar dev
-```
-
-
-### Lint the files
-```bash
-yarn lint
-# or
-npm run lint
-```
-
-
-### Format the files
-```bash
-yarn format
-# or
-npm run format
-```
-
-
-
-### Build the app for production
-```bash
-quasar build
-```
-
-### Customize the configuration
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
+2. env 파일 및 프로그램 설명은 아래 링크에 상세히 기술하였습니다.
+https://doc.clickup.com/31171886/d/h/xq99e-4378/6b4fe1049add830

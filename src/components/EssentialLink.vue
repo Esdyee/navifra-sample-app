@@ -3,7 +3,7 @@
     clickable
     tag="a"
     target="_blank"
-    :href="link"
+    @click="routeLink(link)"
   >
     <q-item-section
       v-if="icon"
@@ -20,6 +20,8 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from "vue-router";
+const router = useRouter();
 export interface EssentialLinkProps {
   title: string;
   caption?: string;
@@ -31,4 +33,9 @@ withDefaults(defineProps<EssentialLinkProps>(), {
   link: '#',
   icon: '',
 });
+
+function routeLink(link?: string) {
+  if (link)
+  router.push(link)
+}
 </script>

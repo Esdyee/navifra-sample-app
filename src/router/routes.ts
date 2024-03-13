@@ -19,10 +19,16 @@ const routes: RouteRecordRaw[] = [
     children: [{ path: '', component: () => import('pages/PaymentPage.vue') }],
   },
 
-    {
+  {
     path: '/payment/fail',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/PaymentFailPage.vue') }],
+  },
+
+  {
+    path: '/async',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('pages/AsyncPage.vue') }],
   },
 
   // Always leave this as last one,

@@ -10,7 +10,6 @@ export interface Category {
 export class CategoryApi {
   public getCategories(): Category[] {
     return [
-      { categoryId: '0000', categoryName: '검색', label: '검색' },
       { categoryId: '0001', categoryName: '음식점', label: '음식점' },
       { categoryId: '0002', categoryName: '병원', label: '병원' },
       { categoryId: '0003', categoryName: '옷가게', label: '옷가게' },

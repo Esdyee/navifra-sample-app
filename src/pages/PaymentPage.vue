@@ -7,12 +7,10 @@
       @click='startPayment'
     >결제하기</q-btn>
   </div>
-  <FooterLayout />
 </template>
 
 <script setup lang='ts'>
 import { loadPaymentWidget, ANONYMOUS } from '@tosspayments/payment-widget-sdk'
-import FooterLayout from 'layouts/FooterLayout.vue';
 import { onMounted, ref } from 'vue';
 const paymentWidgetRef: any = ref(null);
 const paymentMethodsWidgetRef = ref(null);

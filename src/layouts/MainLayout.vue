@@ -26,7 +26,7 @@
         <q-item-label
           header
         >
-          Essential Links / {{ leftDrawerOpen }}
+          Essential Links
         </q-item-label>
 
         <EssentialLink
@@ -40,55 +40,36 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <FooterLayout v-if="$q.screen.xs || $q.screen.sm"/>
   </q-layout>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
+import { ionKey, ionLocationOutline, ionCard } from '@quasar/extras/ionicons-v6';
+import FooterLayout from "layouts/FooterLayout.vue";
+
 
 const essentialLinks: EssentialLinkProps[] = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
+    title: '내 위치',
+    caption: '내 위치를 확인합니다.',
+    icon: ionLocationOutline,
+    link: '/'
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
+    title: '로그인',
+    caption: '로그인 페이지로 이동합니다.',
+    icon: ionKey,
+    link: '/login'
   },
   {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+    title: '결제',
+    caption: '결제 페이지로 이동합니다.',
+    icon: ionCard,
+    link: '/payment'
   }
 ];
 

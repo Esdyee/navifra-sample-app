@@ -2,7 +2,7 @@
   <p>로그인 페이지</p>
 
   <div class='login-box'>
-    <div id='naverOauthLogin' @click="naverCallback">팝업 테스트</div>
+    <div id='naverOauthLogin' @click='naverCallback'>팝업 테스트</div>
     <div id='naverIdLogin'>로그인</div>
 
     <div id='naverIdLogout'
@@ -134,18 +134,18 @@ const naverCallback = async() => {
   window.open(url, '네이버 아이디로 로그인', 'width=600, height=600');
 
   // const headers = {
-  //   "X-Naver-Client-Id": state.naverClientId,
-  //   "X-Naver-Client-Secret": state.clientSecret
+  //   'X-Naver-Client-Id': state.naverClientId,
+  //   'X-Naver-Client-Secret': state.clientSecret
   // };
 
   // const { data } = await api.get(url);
   //
-  // console.log("data => " , data);
+  // console.log('data => ' , data);
   //
-  // console.log("data.access_token => " , naverHashData.access_token);
+  // console.log('data.access_token => ' , naverHashData.access_token);
   // state.access_token = naverHashData.access_token
   //
-  // console.log("data.refresh_token => " , data.refresh_token);
+  // console.log('data.refresh_token => ' , data.refresh_token);
   // state.refresh_token = data.refresh_token
 
   // naverUserInfo();
@@ -154,11 +154,11 @@ const naverCallback = async() => {
 // 사용자 정보 전달받기
 const naverUserInfo = async() => {
   const url = `/v1/nid/me`;
-  let header = "Bearer " + naverHashData.access_token;
-  const headers = {"Authorization": header};
-  console.log("headers => ", headers);
+  let header = 'Bearer ' + naverHashData.access_token;
+  const headers = {'Authorization': header};
+  console.log('headers => ', headers);
   const { data } = await api.get(url, { headers });
-  console.log("*****naverUserInfo data***** => ", data);
+  console.log('*****naverUserInfo data***** => ', data);
 
   // // 변수에 값 넣기
   // state.userid = data.response.email;
