@@ -66,7 +66,7 @@ module.exports = configure(function (ctx) {
         node: 'node16'
       },
 
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -103,6 +103,21 @@ module.exports = configure(function (ctx) {
         },
         '/map-direction': {
           target: 'https://naveropenapi.apigw.ntruss.com',
+          changeOrigin: true,
+          secure: false
+        },
+        '/oauth2.0': {
+          target: 'https://nid.naver.com/',
+          changeOrigin: true,
+          secure: false
+        },
+        '/login/css': {
+          target: 'https://nid.naver.com/',
+          changeOrigin: true,
+          secure: false
+        },
+        '/login/js': {
+          target: 'https://nid.naver.com/',
           changeOrigin: true,
           secure: false
         }
