@@ -16,9 +16,9 @@
              :label='category.label'
       />
     </q-tabs>
-
     <div class="button-box">
       <q-btn
+        class='btn-my-place'
         @click="setMyLocation">내 위치 설정</q-btn>
     </div>
     <div class='input-box' v-if="basicCategory === 'search'">
@@ -80,9 +80,6 @@
   <TermsDialog :visible="termsVisible" />
 
   </q-page>
-
-  <FooterLayout />
-
 
 </template>
 
@@ -478,7 +475,7 @@ function sendDirectionRequest(
   margin: 20px auto 0 auto;
 }
 
-.q-btn {
+.btn-my-place {
   flex: 1;
 }
 

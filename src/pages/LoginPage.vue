@@ -57,7 +57,6 @@
     </div>
   </div>
 
-  <FooterLayout />
 </template>
 
 <script setup lang='ts'>

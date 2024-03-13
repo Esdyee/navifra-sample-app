@@ -37,6 +37,11 @@ function goPayment() {
   router.push('/payment');
 }
 
+defineExpose({
+  goMyLocation,
+  goLogin,
+  goPayment
+});
 </script>
 
 <style scoped>
