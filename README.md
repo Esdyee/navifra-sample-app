@@ -7,3 +7,5 @@
 
 2. env 파일 및 프로그램 설명은 아래 링크에 상세히 기술하였습니다.
 https://doc.clickup.com/31171886/d/h/xq99e-4378/6b4fe1049add830
+
+readme 개행
