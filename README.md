@@ -9,3 +9,5 @@
 
 https://doc.clickup.com/31171886/d/h/xq99e-4378/6b4fe1049add830
 
+내용정리
+https://boardmix.com/app/share/CAE.CL-ZBiABKhBmH7_A00CExeyVJo3McJjBMAZAAQ/oKuc6p
