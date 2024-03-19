@@ -4,7 +4,7 @@
   <FooterLayout />
 </template>
 
-<script setup lang='ts'>
+<script setup lang="ts">
 import FooterLayout from 'layouts/FooterLayout.vue';
 import { onMounted, ref, defineAsyncComponent } from 'vue';
 import LoadingComponent from '../components/LoadingComp.vue';
@@ -22,10 +22,8 @@ const AsyncPage = defineAsyncComponent({
   // 로드 실패 시 사용할 에러 컴포넌트
   errorComponent: ErrorComponent,
   // 시간 초과 시, 에러 컴포넌트가 표시됩니다. 기본값: 무한대
-  timeout: 3000
-})
+  timeout: 3000,
+});
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

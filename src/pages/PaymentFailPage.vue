@@ -10,7 +10,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { onMounted, ref } from 'vue';
 
 const countSeconds = ref(10);
@@ -28,11 +27,9 @@ onMounted(() => {
 function countDown() {
   countSeconds.value -= 1;
 }
-
 </script>
 
 <style scoped>
-
 .message-box {
   display: flex;
   justify-content: center;
@@ -42,9 +39,12 @@ function countDown() {
 }
 
 .fail-message {
-  font-family: 'Toss Product Sans','Tossface',-apple-system,BlinkMacSystemFont,'Bazier Square','Noto Sans KR','Segoe UI',Apple SD Gothic Neo,Roboto,'Noto Sans KR','Helvetica Neue',Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
+  font-family: 'Toss Product Sans', 'Tossface', -apple-system,
+    BlinkMacSystemFont, 'Bazier Square', 'Noto Sans KR', 'Segoe UI',
+    Apple SD Gothic Neo, Roboto, 'Noto Sans KR', 'Helvetica Neue', Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
   font-size: 2rem;
   font-weight: 700;
-
 }
 </style>

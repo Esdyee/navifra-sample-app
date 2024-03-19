@@ -4,7 +4,7 @@ import axios, { AxiosInstance, AxiosProxyConfig } from 'axios';
 const axiosConfig: AxiosProxyConfig = {
   host: 'http://localhost',
   port: 5173,
-}
+};
 
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
@@ -19,11 +19,7 @@ declare module '@vue/runtime-core' {
 // good idea to move this instance creation inside of the
 // "export default () => {}" function below (which runs individually
 // for each client)
-const api = axios.create(
-  {
-
-  }
-);
+const api = axios.create({});
 
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
